@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Waits each argument to be present to nslookup before completing.
 
@@ -20,15 +20,18 @@ log() {
 }
 
 parse_args() {
-  readonly HOSTS=()
+  HOSTS=""
   while [ "$#" -gt 0 ]; do
     case "${1}" in
+      -h|--help)
+        usage
+        ;;
       -q|--quiet)
-        local quiet=true
+        quiet=true
         shift # Shift past flag.
         ;;
       *)
-        HOSTS+=("${1}")
+        HOSTS="${HOSTS} ${1}"
         shift # Shift past host.
         ;;
     esac
@@ -38,7 +41,7 @@ parse_args() {
 }
 
 usage_if_no_hosts() {
-  if [ ${#HOSTS[@]} -eq 0 ]; then
+  if [ -z "${HOSTS}" ]; then
     usage  # Exits.
   fi
 }
@@ -48,8 +51,7 @@ main() {
 
   usage_if_no_hosts
 
-  local hosts=("$@")
-  for host in "${hosts[@]}"; do
+  for host in ${HOSTS}; do
     until nslookup "${host}" > /dev/null 2>&1; do
       log "waiting for ${host}"
       sleep 1
